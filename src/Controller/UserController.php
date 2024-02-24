@@ -8,7 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class UserController extends AbstractController
 {
@@ -80,12 +82,11 @@ class UserController extends AbstractController
 
      // liste des utilisateur
     #[Route('/api/getAllUsers', name: 'get_allusers', methods:'GET')]
-    public function GetAllUser(Request $request): JsonResponse
+    public function GetAllUser(Request $request,SerializerInterface $serializer): JsonResponse
     {
 
         $users=$this->user->findAll();
-        $response=new JsonResponse();
-        $response->setData(['status'=>true, 'users'=>$users]);
-        return $response;
+        $jsonUsersList = $serializer->serialize($users, 'json');
+        return new JsonResponse($jsonUsersList, Response::HTTP_OK, [], true);
     }
 }
