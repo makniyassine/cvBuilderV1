@@ -6,6 +6,8 @@ use App\Repository\TierRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TierRepository::class)]
 class Tier
@@ -13,18 +15,35 @@ class Tier
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getTiers"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getTiers"])]
+    #[Assert\Length(min: 1, max: 15, minMessage: "Le nom doit faire au moins {{ limit }} caractères",
+    maxMessage: "Le nom ne peut pas faire plus de {{ limit }} caractères")]
+    #[Assert\NotBlank(message: "Le nom est obligatoire")]
     private ?string $raisonSociale = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getTiers"])]
+    #[Assert\Url]
     private ?string $siteWeb = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getTiers"])]
+    #[Assert\NotBlank]
+    #[Assert\Email(
+        message: 'The email {{ value }} is not a valid email.'
+    )]
     private ?string $email = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank(message: "Le numéro de téléphone ne peut pas être vide")]
+    #[Assert\Regex(
+        pattern: "/^\+\d{1,3}\s\d{2}\s\d{3}\s\d{3}$/",
+        message: "Please enter a valid phone number in the format '+216 12 456 789'"
+    )]
     private ?string $tel = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -36,13 +55,15 @@ class Tier
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $logo = null;
 
-    #[ORM\Column]
+    #[ORM\Column( nullable: true)]
     private ?bool $active = null;
 
     #[ORM\Column]
+    #[Groups(["getTiers"])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
+    #[Groups(["getTiers"])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\OneToMany(targetEntity: AccessTier::class, mappedBy: 'tier')]

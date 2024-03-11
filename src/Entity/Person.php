@@ -6,6 +6,8 @@ use App\Repository\PersonRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PersonRepository::class)]
 class Person
@@ -13,27 +15,43 @@ class Person
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getPersons"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["getPersons"])]
+    #[Assert\Length(min: 1, max: 15, minMessage: "Le firstName doit faire au moins {{ limit }} caractères",
+    maxMessage: "Le firstName ne peut pas faire plus de {{ limit }} caractères")]
+    #[Assert\NotBlank(message: "Le FirstName est obligatoire")]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["getPersons"])]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getPersons"])]
+    #[Assert\NotBlank]
+    #[Assert\Email(
+        message: 'The email {{ value }} is not a valid email.',
+    )]
     private ?string $email = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\NotBlank(message: "Le numéro de téléphone ne peut pas être vide")]
+    #[Assert\Regex(
+        pattern: "/^\+\d{1,3}\s\d{2}\s\d{3}\s\d{3}$/",
+        message: "Please enter a valid phone number in the format '+216 12 456 789'"
+    )]
     private ?string $tel = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nationality = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(length: 100, nullable: true)]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $photo = null;
 
     #[ORM\Column(length: 255, nullable: true)]

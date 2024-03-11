@@ -6,3 +6,19 @@ controllers:
 
 api_login_check:
     path: /api/login_check
+
+registration:
+    path: /api/register
+    controller: App\Controller\RegistrationController::register
+    methods: ['POST']
+
+
+
+# config/routes.yaml
+
+reset_password:
+    path: /reset-password/{token}
+    controller: App\Controller\ResetPasswordController::resetPassword
+    methods: [GET, POST]
+    
+

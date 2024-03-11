@@ -5,19 +5,31 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Misd\PhoneNumberBundle\Validator\Constraints as MisdAssert;
 
+#[ORM\HasLifecycleCallbacks()]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getUsers"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups(["getUsers"])]
+    #[Assert\NotBlank]
+    #[Assert\Email(
+        message: 'The email {{ value }} is not a valid email.',
+    )]
     private ?string $email = null;
 
     /**
@@ -29,28 +41,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var string The hashed password
      */
-    #[ORM\Column]
+    #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\NotBlank(message: "Le FirstName est obligatoire")]
+    #[Assert\Length(min:8, minMessage:"Your password must be at least 8 characters long")]
     private ?string $password = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["getUsers"])]
+    #[Assert\Length(min: 1, max: 15, minMessage: "Le firstName doit faire au moins {{ limit }} caractères",
+    maxMessage: "Le firstName ne peut pas faire plus de {{ limit }} caractères")]
+    #[Assert\NotBlank(message: "Le FirstName est obligatoire")]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 50)]
+    #[Groups(["getUsers"])]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 20)]
+    #[Groups(["getUsers"])]
+    #[Assert\NotBlank(message: "Le numéro de téléphone ne peut pas être vide")]
+    #[Assert\Regex(
+        pattern: "/^\+\d{1,3}\s\d{2}\s\d{3}\s\d{3}$/",
+        message: "Please enter a valid phone number in the format '+216 12 456 789'"
+    )]
     private ?string $tel = null;
 
-    #[ORM\Column]
+    #[ORM\Column( nullable: true)]
     private ?bool $enabled = null;
 
-    #[ORM\Column]
+    #[ORM\Column( nullable: true)]
     private ?bool $blocked = null;
 
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $photo = null;
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Groups(["getUsers"])]
     private ?string $token = null;
 
     #[ORM\Column(length: 100, nullable: true)]
@@ -63,10 +89,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $color = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private ?\DateTime $createdAt = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $updatedAt = null;
+    private ?\DateTime $updatedAt = null;
 
     #[ORM\OneToMany(targetEntity: AccessTier::class, mappedBy: 'user')]
     private Collection $accessTier;
@@ -79,6 +105,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
     private ?Person $no = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $ResetToken = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $TokenDate = null;
 
     public function __construct()
     {
@@ -279,24 +311,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): ?\DateTime
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(\DateTime $createdAt): static
     {
         $this->createdAt = $createdAt;
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeImmutable
+    public function getUpdatedAt(): ?\DateTime
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
+    public function setUpdatedAt(\DateTime $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
 
@@ -378,5 +410,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->no = $no;
 
         return $this;
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->ResetToken;
+    }
+
+    public function setResetToken(?string $ResetToken): static
+    {
+        $this->ResetToken = $ResetToken;
+
+        return $this;
+    }
+
+    public function getTokenDate(): ?\DateTimeInterface
+    {
+        return $this->TokenDate;
+    }
+
+    public function setTokenDate(?\DateTimeInterface $TokenDate): static
+    {
+        $this->TokenDate = $TokenDate;
+
+        return $this;
+    }
+
+    #[ORM\PrePersist()]
+    public function onPrePersist(): void
+    {
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
+    }
+
+    #[ORM\PreUpdate()]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 }

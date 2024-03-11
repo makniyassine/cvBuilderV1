@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\CvRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CvRepository::class)]
 class Cv
@@ -11,15 +12,19 @@ class Cv
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getCvs"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getCvs"])]
     private ?string $name = null;
 
     #[ORM\Column]
+    #[Groups(["getCvs"])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
+    #[Groups(["getCvs"])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'cv')]
